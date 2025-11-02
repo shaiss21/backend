@@ -5,6 +5,9 @@ const connectDB = async () => {
     const mongoURI = process.env.MONGODB_URI;
     
     if (!mongoURI) {
+      console.error('❌ MONGODB_URI environment variable is not set!');
+      console.error('💡 For Railway deployment: Set MONGODB_URI in Railway Variables tab');
+      console.error('💡 For local development: Create .env file with MONGODB_URI');
       throw new Error('MongoDB URI not configured');
     }
 
