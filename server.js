@@ -28,13 +28,48 @@ const limiter = rateLimit({
 app.use('/api/', limiter);
 
 // CORS configuration
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://192.168.29.8:3000',
+  'http://127.0.0.1:3000',
+  // Add Vercel frontend domain
+  'https://he-art-sync-difb0z1kb-shaiss21s-projects.vercel.app',
+  // Allow all Vercel preview deployments (wildcard)
+  /^https:\/\/.*\.vercel\.app$/
+];
+
+// Add CLIENT_URL from environment if set
+if (process.env.CLIENT_URL) {
+  const clientUrl = process.env.CLIENT_URL;
+  if (!allowedOrigins.includes(clientUrl)) {
+    allowedOrigins.push(clientUrl);
+  }
+}
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://192.168.29.8:3000',
-    'http://127.0.0.1:3000'
-  ],
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+    
+    // Check if origin is allowed
+    const isAllowed = allowedOrigins.some(allowedOrigin => {
+      if (typeof allowedOrigin === 'string') {
+        return origin === allowedOrigin;
+      } else if (allowedOrigin instanceof RegExp) {
+        return allowedOrigin.test(origin);
+      }
+      return false;
+    });
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Body parsing middleware
