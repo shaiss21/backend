@@ -47,8 +47,13 @@ RATE_LIMIT_MAX_REQUESTS=100
 Railway will automatically detect Node.js. Ensure:
 
 - **Root Directory**: `backend` (if deploying from monorepo)
-- **Build Command**: `npm install`
+- **Build Command**: (Auto-detected, no build command needed)
 - **Start Command**: `npm start`
+
+**Important**: The Dockerfile has been updated to:
+- ✅ Only build the backend (no frontend dependencies)
+- ✅ Works without frontend directory
+- ✅ Optimized for Railway deployment
 
 ### 4. Port Configuration
 

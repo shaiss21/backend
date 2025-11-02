@@ -3,6 +3,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
+const fs = require('fs');
 require('dotenv').config();
 
 // Database connection
@@ -40,9 +41,6 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Serve static files from React build
-app.use(express.static(path.join(__dirname, '../frontend/build')));
-
 // Routes
 app.use('/api/art', artRoutes);
 app.use('/api/mood', moodRoutes);
@@ -57,6 +55,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Serve static files from React build (only if exists, for local development)
+const frontendBuildPath = path.join(__dirname, '../frontend/build');
+if (fs.existsSync(frontendBuildPath)) {
+  app.use(express.static(frontendBuildPath));
+  
+  // Catch all handler: send back React's index.html file for client-side routing
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(frontendBuildPath, 'index.html'));
+  });
+}
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
@@ -64,11 +73,6 @@ app.use((err, req, res, next) => {
     error: 'Internal server error',
     message: process.env.NODE_ENV === 'development' ? err.message : 'Something went wrong'
   });
-});
-
-// Catch all handler: send back React's index.html file for client-side routing
-app.get('*', (req, res) => {
-  res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
 
 // Connect to database and start server

@@ -1,23 +1,4 @@
-# Multi-stage build for production
-FROM node:18-alpine AS backend-build
-
-# Set working directory
-WORKDIR /app
-
-# Copy package files
-COPY package*.json ./
-
-# Install dependencies
-RUN npm ci --only=production
-
-# Copy source code
-COPY . .
-
-# Copy and build frontend
-COPY ../frontend ./frontend
-RUN npm run build:frontend
-
-# Production stage
+# Production build for backend API only
 FROM node:18-alpine AS production
 
 # Install dumb-init for proper signal handling
@@ -30,9 +11,14 @@ RUN adduser -S nodejs -u 1001
 # Set working directory
 WORKDIR /app
 
-# Copy built application
-COPY --from=backend-build --chown=nodejs:nodejs /app .
-COPY --from=backend-build --chown=nodejs:nodejs /app/frontend/build ./frontend/build
+# Copy package files
+COPY package*.json ./
+
+# Install dependencies (production only)
+RUN npm ci --production && npm cache clean --force
+
+# Copy source code
+COPY --chown=nodejs:nodejs . .
 
 # Switch to non-root user
 USER nodejs
